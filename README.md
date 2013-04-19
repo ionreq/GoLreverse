@@ -32,6 +32,12 @@ Finally, save the whole workspace as a Dyalog workspace file, in order to have t
 If there's an error "WS FULL", you can increase the workspace memory size.
 Go to "Options/Configuration/Workspace" and enter a bigger workspace size.
 You have to restart Dyalog APL for this to take effect.
+If you still have trouble finding a solution, and your array is higher than wide,
+you can try computing a solution for the transposed array (so that it is wider than high).
+Because the algorithm as it is, first processes all the rows until only one row is left.
+Then many configurations fall away due to the periodic boundary conditions.
+After that it processes the columns.
+So there's a difference there in how many configurations are left, and one case may use less memory than the other.
 
 Have fun!
 
