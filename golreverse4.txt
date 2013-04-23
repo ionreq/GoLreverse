@@ -1,0 +1,156 @@
+:namespace golreverse
+
+    ⍝ usage:
+    ⍝ b←block or b←nine or b←pad nine or b←pad pad nine ...
+    ⍝ then "main"
+    ⍝ b←⊃c[3] , main , ...
+                
+    ⍝ todo:
+    ⍝ more than one generation back, tree- (or root-) like
+    ⍝ three types of boundary conditions: none, zero and periodic
+    ⍝ none: do nothing
+    ⍝ zero: apply boundzero at start
+    ⍝ periodic: merge across the boundaries! together with the other merges!
+
+
+    rl←{2↑[2]⍵}         ⍝ left border (two columns)
+    rr←{2↑[2]¯2⌽⍵}      ⍝ right border (two columns)
+
+    do←{1↓⍵}            ⍝ drop top row
+    du←{⊖1↓⊖⍵}          ⍝ drop bottom row
+    dl←{1↓[2]⍵}         ⍝ drop left column
+    dr←{⌽1↓[2]⌽⍵}       ⍝ drop right column
+
+    strip←{0=⍴,⍵:⍬ ⋄ do du dl dr ⍵}     ⍝ strip surrounding cells
+
+    mlr←{(dr¨⍺)∘.,dl¨⍵}     ⍝ merge two lists of configurations with matching borders
+
+    key←{2⊥,⍵}      ⍝ with this key and 32bit integer width/height max is 13
+
+    ∇ R←a mergelr b;ka;kb;ia;ib;ea;eb;l    ⍝ merge two lists of configurations
+      :If (0=⍴a)∨0=⍴b ⋄ R←⍬ ⋄ :Return ⋄ :End
+      ka←key¨rr¨a           ⍝ generate key values
+      kb←key¨rl¨b
+      ia←⍋ka                ⍝ sort wrt keys
+      ib←⍋kb
+      a←a[ia] ⋄ ka←ka[ia]   ⍝ rearrange configs and keys
+      b←b[ib] ⋄ kb←kb[ib]
+      ea←1,2≠/ka            ⍝ enclose those that are the same
+      eb←1,2≠/kb
+      a←ea⊂a ⋄ ka←ea⊂ka     ⍝ again, for configs and keys
+      b←eb⊂b ⋄ kb←eb⊂kb
+      ka←1↑¨ka              ⍝ unique keys
+      kb←1↑¨kb
+      l←ka∩kb               ⍝ the keys that are in both lists
+      :If 0=⍴l
+          R←⍬               ⍝ if none are in both lists, there's nothing to merge
+      :Else
+          a←(ka∊l)/a        ⍝ select appropriate configs (they are lists)
+          b←(kb∊l)/b
+          R←⊃,/,¨a mlr¨b    ⍝ generate list with merged configs
+      :End
+    ∇
+
+    mmlr←{⊃,/2mergelr/¨((2⌷⍴⍵)⍴1 0)⊂⍵}      ⍝ matrix element merge
+
+    ∇ R←mmergelr w      ⍝ merge matrix elements
+      :If 0=2|2⌷⍴w
+          R←mmlr w      ⍝ if dimension is even, go ahead
+      :Else
+          :If (+/⊃⍴¨1↑[2]w)>+/⊃⍴¨1↑[2]⌽w    ⍝ leave away the bigger column
+              R←(1↑[2]w),mmlr 1↓[2]w        ⍝ leftmost column was bigger
+          :Else
+              R←(mmlr⌽1↓[2]⌽w),⌽1↑[2]⌽w     ⍝ rightmost column was bigger
+          :End
+      :End
+    ∇
+
+    elimlr←{0=⍴⍵:⍬ ⋄ ((rl¨⍵)≡¨(rr¨⍵))/⍵}    ⍝ select only those configs with rl≡rr
+
+    ∇ R←alle
+      R←(⊂3 3)⍴¨(⊂9⍴2)⊤¨¯1+⍳512     ⍝ make a list with all the 3×3 configs
+    ∇
+
+    gen←{r←¯1 0 1 ⋄ n←⊃+/,(r∘.∨r)×r∘.⊖r⌽¨⊂⍵ ⋄ (n=3)∨⍵∧n=2}  ⍝ do one generation
+
+    ∆←#.display
+
+    ∇ R←block
+      R←(4 4⍴⍳16)∊6 7 10 11     ⍝ 2x2 block in 4x4 space
+    ∇
+    
+    ∇ R←nine
+      R←~(5 3⍴⍳15)∊5 10 11      ⍝ 5x3 nine
+    ∇
+
+    ∇ R←random(m n)
+      ⎕RL←+/⎕TS         ⍝ randomize timer
+      R←43>?m n⍴100     ⍝ random config
+    ∇
+     
+    ∇ R←heart
+      R←(8 9⍴⍳72)∊12 13 15 16 20 23 26 29 35 39 43 49 51 59
+    ∇
+
+    ∆n←{'A2'⎕FMT'.⎕'[1+⍵]}      ⍝ nice display
+                                                                            
+    ⍝ if you want to sum only over the boundary, set inner block to zero first
+    zero←{b←⍵ ⋄ b[1+⍳¯2+⍴b]←0 ⋄ b}    ⍝ set inner block to zero
+    sum←{+/,⍵}
+
+    ⍝top←{(⊃¨0=+/¨1↑¨⍵)/⍵}        ⍝ take only configs with top row ≡0
+    top←{(⊃¨0=+/¨1↑¨⍺)/⍺}         ⍝ "dyadic" version, right arg will be 0
+    mtopr←{e←⍵ ⋄ (1↑e)top←0 ⋄ ⍉¨¨⍉⊖¨¨⊖e}     ⍝ top for matrix and rotate 90 deg
+    pad←{¯1⊖¯1⌽(2 2+⍴⍵)↑⍵}        ⍝ pad an array with border of 0's
+                     
+    ∇ R←boundzero e     ⍝ eliminate all configs that don't have zero boundary
+      R←(mtopr⍣4)e
+    ∇
+
+    ∇ main;a;a1;a0
+      a←alle            ⍝ all 512 3×3 configs
+      c←(⊂2 2)⌷¨gen¨a   ⍝ centers of all the next generations
+      a1←c/a            ⍝ configs with center 1
+      a0←(~c)/a         ⍝ configs with center 0
+     
+      b←heart           ⍝ set dest config
+     
+      ∆ b               ⍝ display the destination config
+      c←(a0 a1)[b+1]    ⍝ replace 0's and 1's with the config lists
+     
+      c←boundzero c     ⍝ impart boundary conditions
+     
+      ⎕←' ' ⋄ ∆⍴¨c      ⍝ display size of lists
+     
+      :Repeat           ⍝ merge rows and columns
+          :If 1<1⌷⍴c
+              c←⍉¨¨⍉mmergelr⍉¨¨⍉c ⋄ ⎕←'merge rows' ⋄ ∆⍴¨c
+          :End
+          :If 1<2⌷⍴c
+              c←mmergelr c ⋄ ⎕←'merge cols' ⋄ ∆⍴¨c
+          :End
+      :Until (1=1⌷⍴c)∧1=2⌷⍴c
+     
+      c←⊃c
+     
+      :If 0<⍴,c
+          ⍝c←strip¨c     ⍝ strip surrounding cells
+          ⍝∆ c           ⍝ the previous generations
+          ⍝∆ gen¨c       ⍝ test if they all become the destination config
+     
+          c←(c≡¨⌽¨c)/c   ⍝ only symmetric ones
+          d←sum¨c        ⍝ number of live cells
+          sum b          ⍝ display how many live cells b config has
+          u←9+⍳25        ⍝ numbers for which we want to do the stat
+          f←+/u∘.=d      ⍝ how many configs for a certain number of live cells
+          ↑f u           ⍝ display this nicely
+          g←(d=18)/c     ⍝ all configs with x live cells
+          ⎕←' '
+          ∆n¨strip¨g
+          ⎕←' '
+          ∆n¨strip¨gen¨g     ⍝ test if they all become the dest config
+      :End
+    ∇
+
+:endnamespace
+
