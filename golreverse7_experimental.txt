@@ -125,11 +125,9 @@
 
     elim←{(⍴⍵)>100000:⍵[100000?⍴⍵] ⋄ ⍵}    ⍝ eliminate random if more than 100000
 
-    ∇ R←bmerge c;u        ⍝ merge first two columns
+    ∇ R←bmerge c        ⍝ merge first two columns
       :If 1<2⌷⍴c
-          u←⊃2 mergelr/¨⊂2↑[2]c
-          c←1↓[2]c
-          (1↑[2]c)←u
+          c←(2 mergelr/2↑[2]c),2↓[2]c
       :End
       ⍝R←elim¨c
       R←c
