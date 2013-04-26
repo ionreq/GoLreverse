@@ -1,0 +1,183 @@
+:namespace golreverse
+
+    ⍝ usage:
+    ⍝ b←block or b←nine or b←pad nine or b←pad pad nine ...
+    ⍝ then "main"
+    ⍝ b←⊃c[3] , main , ...
+                
+    ⍝ todo:
+    ⍝ more than one generation back, tree- (or root-) like
+    ⍝ three types of boundary conditions: none, zero and periodic
+    ⍝ none: do nothing
+    ⍝ zero: apply boundzero at start
+    ⍝ periodic: merge across the boundaries! together with the other merges!
+
+
+    rl←{2↑[2]⍵}         ⍝ left border (two columns)
+    rr←{2↑[2]¯2⌽⍵}      ⍝ right border (two columns)
+
+    do←{1↓⍵}            ⍝ drop top row
+    du←{⊖1↓⊖⍵}          ⍝ drop bottom row
+    dl←{1↓[2]⍵}         ⍝ drop left column
+    dr←{⌽1↓[2]⌽⍵}       ⍝ drop right column
+
+    strip←{0=⍴,⍵:⍬ ⋄ do du dl dr ⍵}     ⍝ strip surrounding cells
+
+    mlr←{(dr¨⍺)∘.,dl¨⍵}     ⍝ merge two lists of configurations with matching borders
+
+    key←{2⊥,⍵}      ⍝ with this key and 32bit integer width/height max is 13
+
+    ∇ R←a mergelr b;ka;kb;ia;ib;ea;eb;l    ⍝ merge two lists of configurations
+      :If (0=⍴a)∨0=⍴b ⋄ R←⍬ ⋄ :Return ⋄ :End
+      ka←key¨rr¨a           ⍝ generate key values
+      kb←key¨rl¨b
+      ia←⍋ka                ⍝ sort wrt keys
+      ib←⍋kb
+      a←a[ia] ⋄ ka←ka[ia]   ⍝ rearrange configs and keys
+      b←b[ib] ⋄ kb←kb[ib]
+      ea←1,2≠/ka            ⍝ enclose those that are the same
+      eb←1,2≠/kb
+      a←ea⊂a ⋄ ka←ea⊂ka     ⍝ again, for configs and keys
+      b←eb⊂b ⋄ kb←eb⊂kb
+      ka←1↑¨ka              ⍝ unique keys
+      kb←1↑¨kb
+      l←ka∩kb               ⍝ the keys that are in both lists
+      :If 0=⍴l
+          R←⍬               ⍝ if none are in both lists, there's nothing to merge
+      :Else
+          a←(ka∊l)/a        ⍝ select appropriate configs (they are lists)
+          b←(kb∊l)/b
+          R←⊃,/,¨a mlr¨b    ⍝ generate list with merged configs
+      :End
+    ∇
+
+    ∇ R←alle
+      R←(⊂3 3)⍴¨(⊂9⍴2)⊤¨¯1+⍳512     ⍝ make a list with all the 3×3 configs
+    ∇
+
+    gen←{r←¯1 0 1 ⋄ n←⊃+/,(r∘.∨r)×r∘.⊖r⌽¨⊂⍵ ⋄ (n=3)∨⍵∧n=2}  ⍝ do one generation
+    conv←{r←¯1 0 1 ⋄ ⊃+/,(3 3⍴1)×r∘.⊖r⌽¨⊂⍵}   ⍝ convolution
+
+    ∆←#.display
+
+    ∇ R←block
+      R←(4 4⍴⍳16)∊6 7 10 11     ⍝ 2x2 block in 4x4 space
+    ∇
+    
+    ∇ R←nine
+      R←~(5 3⍴⍳15)∊5 10 11      ⍝ 5x3 nine
+    ∇
+
+    ∇ R←text
+      R←⍬,0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+      R←1(⊃⍴R)⍴R
+      R←R⍪1 0 1 0 1 1 1 0 1 0 0 0 1 0 0 0 0 1 0 0 1
+      R←R⍪1 0 1 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 1 0 1
+      R←R⍪1 1 1 0 1 1 0 0 1 0 0 0 1 0 0 0 1 0 1 0 1
+      R←R⍪1 0 1 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 1 0 0
+      R←R⍪1 0 1 0 1 1 1 0 1 1 1 0 1 1 1 0 0 1 0 0 1
+      R←1↓R
+    ∇
+
+    ∇ R←random(m n)
+      ⎕RL←+/⎕TS         ⍝ randomize timer
+      R←43>?m n⍴100     ⍝ random config
+    ∇
+
+    ∇ R←heart
+      R←⍬,0 0 0 0 0 0 0 0 0
+      R←1(⊃⍴R)⍴R
+      R←R⍪0 0 0 1 1 1 0 0 0
+      R←R⍪0 0 1 0 0 0 1 0 0
+      R←R⍪0 1 0 1 0 1 0 1 0
+      R←R⍪1 0 0 1 0 1 0 0 1
+      R←R⍪1 0 0 0 0 0 0 0 1
+      R←R⍪1 0 1 0 0 0 1 0 1
+      R←R⍪0 1 0 1 1 1 0 1 0
+      R←R⍪0 0 1 0 0 0 1 0 0
+      R←R⍪0 0 0 1 1 1 0 0 0
+      R←1↓R
+    ∇
+
+    ∇ R←box m;x;y      ⍝ make a box around a character matrix
+      y x←⍴m
+      ⍝' ┘ ┐ ┌ └ ┼ ─ ├ ┤ ┴ ┬ │ '
+      R←(y 1⍴'│'),m,(y 1⍴'│')
+      R←('┌',(1 x⍴'─'),'┐')⍪R
+      R←R⍪('└',(1 x⍴'─'),'┘')
+    ∇
+
+    ∆n←{box 1↓[2]'A2'⎕FMT'·⎕'[1+⍵]}      ⍝ nice display
+                                                                                
+    ⍝ if you want to sum only over the boundary, set inner block to zero first
+    zero←{b←⍵ ⋄ b[1+⍳¯2+⍴b]←0 ⋄ b}    ⍝ set inner block to zero
+    sum←{+/,⍵}
+
+    ⍝top←{(⊃¨0=+/¨1↑¨⍵)/⍵}        ⍝ take only configs with top row ≡0
+    top←{(⊃¨0=+/¨1↑¨⍺)/⍺}         ⍝ "dyadic" version, right arg will be 0
+    rot←{⍉¨¨⍉⊖¨¨⊖⍵}               ⍝ rotate 90 deg
+    mtopr←{e←⍵ ⋄ (1↑e)top←0 ⋄ e}  ⍝ top for matrix
+    pad←{¯1⊖¯1⌽(2 2+⍴⍵)↑⍵}        ⍝ pad an array with border of 0's
+                     
+    ∇ R←boundzero e         ⍝ eliminate all configs that don't have zero boundary
+      R←((mtopr∘rot)⍣4)e
+    ∇
+
+    elim←{(⍴⍵)>100000:⍵[100000?⍴⍵] ⋄ ⍵}    ⍝ eliminate random if more than 100000
+
+    ∇ R←bmerge c;u        ⍝ merge first two columns
+      :If 1<2⌷⍴c
+          u←⊃2 mergelr/¨⊂2↑[2]c
+          c←1↓[2]c
+          (1↑[2]c)←u
+      :End
+      ⍝R←elim¨c
+      R←c
+    ∇
+    
+    ∆s←{⎕←⍵ ⋄ ⎕←' '}      ⍝ display with empty line
+            
+
+    ∇ main;a;a0;a1;a2
+      a←alle            ⍝ all 512 3×3 configs
+      c←(⊂2 2)⌷¨gen¨a   ⍝ centers of all the next generations
+      a0←(~c)/a         ⍝ configs with center 0
+      a1←c/a            ⍝ configs with center 1
+      a2←1⍴⊂3 3⍴0       ⍝ zero config
+     
+      ⍝b←pad heart       ⍝ set dest config
+     
+      ∆n b              ⍝ display the destination config
+      c←(a0 a1 a2)[1+b+2×0=conv conv b]    ⍝ replace 0's and 1's with the config lists
+      ⍝c←(a0 a1)[1+b]    ⍝ replace 0's and 1's with the config lists
+     
+      c←boundzero c     ⍝ impart boundary conditions
+     
+      ∆s⍴¨c      ⍝ display size of lists
+     
+      :Repeat
+          c←((bmerge∘rot)⍣4)c
+          ⍝c←elim¨c
+          ∆s⍴¨c
+      :Until 1 1≡⍴c
+     
+      c←⊃c
+     
+      :If 0<⍴,c
+          ⍝∆n¨strip¨c         ⍝ the previous generations
+          ⍝∆n¨strip¨gen¨c     ⍝ test if they all become the destination config
+     
+          ⍝c←(c≡¨⌽¨c)/c   ⍝ only symmetric ones
+          d←sum¨c        ⍝ number of live cells
+          s←sum b        ⍝ display how many live cells b config has
+          u←s+¯3+⍳25     ⍝ numbers for which we want to do the stat
+          f←+/u∘.=d      ⍝ how many configs for a certain number of live cells
+          s
+          ↑f u           ⍝ display this nicely
+          ⍝g←(d=46)/c     ⍝ all configs with x live cells
+          ⍝∆n¨strip¨g
+          ⍝∆n¨strip¨gen¨g     ⍝ test if they all become the dest config
+      :End
+    ∇
+
+:endnamespace
