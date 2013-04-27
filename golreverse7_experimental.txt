@@ -61,7 +61,7 @@
     ∆←#.display
 
     ∇ R←block
-      R←(4 4⍴⍳16)∊6 7 10 11     ⍝ 2x2 block in 4x4 space
+      R←2 2⍴1     ⍝ 2x2 block
     ∇
     
     ∇ R←nine
@@ -84,7 +84,7 @@
       R←43>?m n⍴100     ⍝ random config
     ∇
 
-    ∇ R←heart
+    ∇ R←smilie
       R←⍬,0 0 0 0 0 0 0 0 0
       R←1(⊃⍴R)⍴R
       R←R⍪0 0 0 1 1 1 0 0 0
@@ -96,6 +96,18 @@
       R←R⍪0 1 0 1 1 1 0 1 0
       R←R⍪0 0 1 0 0 0 1 0 0
       R←R⍪0 0 0 1 1 1 0 0 0
+      R←1↓R
+    ∇
+
+    ∇ R←heart
+      R←⍬,0 0 0 0 0 0 0
+      R←1(⊃⍴R)⍴R
+      R←R⍪0 1 1 0 1 1 0
+      R←R⍪1 0 0 1 0 0 1
+      R←R⍪1 0 0 0 0 0 1
+      R←R⍪0 1 0 0 0 1 0
+      R←R⍪0 0 1 0 1 0 0
+      R←R⍪0 0 0 1 0 0 0
       R←1↓R
     ∇
 
@@ -134,14 +146,8 @@
     
     ∆s←{⎕←⍵ ⋄ ⎕←' '}      ⍝ display with empty line
 
-      fil←{           ⍝ cut off leading and trailing 0s
-          v←(1,2≠/⍵=0)⊂⍵
-          w←⊃¨(⍴¨v)×0=⊃¨v
-          w1←1↑w
-          w2←1↑⌽w
-          (w1⍴0),(((⍴⍵)-w1+w2)⍴1),(w2⍴0)
-      }
-
+    fil←{(⌽∘{(+/∧\0=⍵)↓⍵}⍣2)⍵}      ⍝ cut off leading and trailing 0s
+    to←{¯1+⍺+⍳1+⍵-⍺}
 
     ∇ main;a;a0;a1;a2
       a←alle            ⍝ all 512 3×3 configs
@@ -172,14 +178,14 @@
           ⍝∆n¨strip¨c         ⍝ the previous generations
           ⍝∆n¨strip¨gen¨c     ⍝ test if they all become the destination config
      
-          ⍝c←(c≡¨⌽¨c)/c   ⍝ only symmetric ones
-          d←sum¨c        ⍝ number of live cells
-          s←sum b        ⍝ display how many live cells b config has
-          u←⍳3×s         ⍝ numbers for which we want to do the stat
-          f←+/u∘.=d      ⍝ how many configs for a certain number of live cells
+          ⍝c←(c≡¨⌽¨c)/c     ⍝ only symmetric ones
+          d←sum¨c          ⍝ number of live cells
+          s←sum b          ⍝ display how many live cells b config has
+          u←(⌊/d)to(⌈/d)   ⍝ numbers for which we want to do the stat
+          f←+/u∘.=d        ⍝ how many configs for a certain number of live cells
           s
-          (fil f)/↑f u   ⍝ display this nicely
-          ⍝g←(d=46)/c     ⍝ all configs with x live cells
+          ↑f u             ⍝ display this nicely
+          ⍝g←(d=46)/c       ⍝ all configs with x live cells
           ⍝∆n¨strip¨g
           ⍝∆n¨strip¨gen¨g     ⍝ test if they all become the dest config
       :End
