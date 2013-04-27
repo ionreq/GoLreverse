@@ -180,10 +180,9 @@
      
           ⍝c←(c≡¨⌽¨c)/c     ⍝ only symmetric ones
           d←sum¨c          ⍝ number of live cells
-          s←sum b          ⍝ display how many live cells b config has
           u←(⌊/d)to(⌈/d)   ⍝ numbers for which we want to do the stat
           f←+/u∘.=d        ⍝ how many configs for a certain number of live cells
-          s
+          sum b            ⍝ display how many live cells b config has
           ↑f u             ⍝ display this nicely
           ⍝g←(d=46)/c       ⍝ all configs with x live cells
           ⍝∆n¨strip¨g
