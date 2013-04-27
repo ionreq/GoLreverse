@@ -131,7 +131,7 @@
     pad←{¯1⊖¯1⌽(2 2+⍴⍵)↑⍵}   ⍝ pad an array with border of 0's
                      
     ∇ R←boundzero e         ⍝ eliminate all configs that don't have zero boundary
-      R←((mtopr∘rot)⍣4)e
+      R←(mtopr∘rot⍣4)e
     ∇
 
     elim←{(⍴⍵)>100000:⍵[100000?⍴⍵] ⋄ ⍵}    ⍝ eliminate random if more than 100000
@@ -146,7 +146,6 @@
     
     ∆s←{⎕←⍵ ⋄ ⎕←' '}      ⍝ display with empty line
 
-    fil←{(⌽∘{(+/∧\0=⍵)↓⍵}⍣2)⍵}      ⍝ cut off leading and trailing 0s
     to←{¯1+⍺+⍳1+⍵-⍺}
 
     ∇ main;a;a0;a1;a2
@@ -167,7 +166,7 @@
       ∆s⍴¨c      ⍝ display size of lists
      
       :Repeat
-          c←((bmerge∘rot)⍣4)c
+          c←(bmerge∘rot⍣4)c
           ⍝c←elim¨c
           ∆s⍴¨c
       :Until 1 1≡⍴c
